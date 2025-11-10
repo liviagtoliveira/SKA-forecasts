@@ -102,7 +102,7 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm):
     #
     # HI profile at 20 percent level see Obreschow et al. 2009
     #
-    w20_HI_galaxy = 3.6 * p4                         
+    w20_HI_galaxy = 3.6 * p4 / np.sqrt(2)                         
     #
     # Essentially this factor scales the Dnu to a single
     # channel.

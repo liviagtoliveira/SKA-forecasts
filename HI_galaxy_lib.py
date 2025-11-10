@@ -132,7 +132,7 @@ def N_func_SAX(z, S_rms, S_area):
     #
     # values from Table 1 Peak flux densities for HI
     
-    if S_rms < 0.01.:
+    if S_rms < 0.01:
         c1 = 6.55
         c2 = 2.54
         c3 = 1.42
