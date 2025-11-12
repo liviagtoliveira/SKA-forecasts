@@ -108,7 +108,7 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, priors=None, ellipse=False,
         plt.show()
 
     if plotFoM:
-        print(z_bins[i], FoM[i])
+        print(t_obs, N_ant, z_bins[i], FoM[i])
         return FoM[i]
 
     return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu}\nS_area: {S_area}\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]}\nMeasured Error: {sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
@@ -125,7 +125,7 @@ best_area   = best_values[0][1]
 
 
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def))
-#print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, priors_baseline, ellipse=True))
+print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, priors_baseline, ellipse=True))
 
 
 #
@@ -133,7 +133,7 @@ best_area   = best_values[0][1]
 #
 
 print('\n=== t_obs ===')
-t_obs_val = np.linspace(3600,3600*24,100)
+t_obs_val = np.linspace(3600,3600*24,24)
 fom_val_t = [analysis(t_obs, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, priors_baseline, plotFoM=True) for t_obs in t_obs_val]
 plt.plot(t_obs_val, fom_val_t)
 plt.xlabel('t_obs [s]')
