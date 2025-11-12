@@ -73,6 +73,18 @@ def analysis_FoM(z, t_obs, t_exp, N_ant, Dnu, S_area, fwhm, priors=None):
     return F, fmlib.FoM(F, 1, 2), fmlib.unc(F), delta_v(p_LCDM), sigma_v # Fisher Matrix, Figure of Merit between q0 and j0 and uncertainties
 
 
+def hrk_analysis_results(z, t_obs, t_exp, N_ant, Dnu, S_area, fwhm, priors=None): # t_obs in s, t_exp in yrs, Dnu in Hz, S_area in sq deg and fwhm in cm/s
+
+    FMANA = analysis_FoM(z, t_obs, t_exp, N_ant, Dnu, S_area, fwhm, priors)
+    FoM   = FMANA[1]
+    unc   = FMANA[2]
+
+    delta_v = dvlib.delta_v_func(z, p_LCDM, t_exp)
+    sigma_v = dvlib.sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm)
+    
+    return f'\n=== Analysis ===\nRedshift: {z}\nDnu: {Dnu}\nS_area: {S_area}\nExpected drift: {delta_v}\nMeasured Error: {sigma_v}\nFigure of Merit: {FoM} \nUncertainties of H0, q0, j0: {unc}'
+
+
 def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, priors=None, doplot=False): # t_obs in s, t_exp in yrs, Dnu in Hz, S_area in sq deg and fwhm in cm/s
     z1 = np.array([.3])
     z2 = np.array([.3, .5])
