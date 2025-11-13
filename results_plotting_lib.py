@@ -277,5 +277,5 @@ def plot_ellipses(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, prio
 
     fig.tight_layout()
     if savefig:
-        fig.savefig('../ellipses.png')
+        fig.savefig('ellipses.png')
     plt.show()
