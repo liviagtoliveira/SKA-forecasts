@@ -59,7 +59,7 @@ N_ant_def  = 144                         # integer
 
 # === Plot confidence ellipses  ===
 #
-#dvplt.plot_ellps_panel(np.array([0.1, 0.3, 0.5]), Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, priors_baseline, savefig=True)
+dvplt.plot_ellps_panel(np.array([0.1, 0.3, 0.5]), Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, priors_baseline, savefig=True)
 dvplt.plot_ellipses(np.array([0.1, 0.3, 0.5]), Dnu_val, 5000, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, priors_baseline, savefig=True)
 
 
