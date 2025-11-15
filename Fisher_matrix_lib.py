@@ -39,8 +39,8 @@ def Fisher_matrix(p, ffs, sigmas, priors=None):
     for i in range(m):
         for j in range(m):
 
-            part_i, part_j = np.vectorize(lambda ff: partial(ff,i,p)), np.vectorize(lambda ff: partial(ff,j,p))
-            F[i,j] = np.sum((part_i(ffs) * part_j(ffs)) / sigmas**2) # calculates each entry
+            part_i, part_j = partial(ffs,i,p), partial(ffs,j,p)
+            F[i,j] = np.sum((part_i * part_j) / sigmas**2) # calculates each entry
     
     if priors is None or np.all(priors==0):
         return F
