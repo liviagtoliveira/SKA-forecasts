@@ -94,10 +94,10 @@ def rho(F, i, j):
 def ellipse(F, i, j):
 
     '''
-    Returns the axes and the angle from the x-axis of the confidence ellipse of parameters i and j
+    Returns the axes and the angle [rad] from the x-axis of the confidence ellipse of parameters i and j
 
     F    = Fisher matrix of the model
-    i, j = indexes of the parameters for which to calculate the correlation coefficient´
+    i, j = indexes of the parameters for which to calculate the correlation coefficient
     '''
 
     C = cov_matrix(F)

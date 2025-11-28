@@ -1,15 +1,13 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-np.set_printoptions(linewidth=np.inf)
 
 from redshiftdrift_lib import *
 from telescope_lib import *
 from Fisher_matrix_lib import *
 
 
-def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant):
+def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, delta_z):
     '''
     Creates a panel of plots N(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -18,6 +16,7 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant):
     S_area_val = values of survey area to plot [sq deg]
     t_obs      = observation time used to calculate N [s]
     N_ant      = number of antennas used to calculate N
+    delta_z    = delta z for dN/dz integration
     '''
     
     n       = len(Dnu_val)
@@ -27,7 +26,7 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant):
     for i, Dnu in enumerate(Dnu_val):
         rms = S_rms_func(t_obs, N_ant, Dnu)
         for j, S_area in enumerate(S_area_val):
-            N = [N_func(z, rms,S_area)[0] for z in z_val]
+            N = [N_func(z, rms, S_area, delta_z)[0] for z in z_val]
             ax[i,j].scatter(z_val, N)
             ax[i,j].set_xlabel('z')
             ax[i,j].set_ylabel('N')
@@ -41,7 +40,7 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant):
     plt.show()
 
 
-def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm):
+def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
     '''
     Creates a panel of plots sigma_v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -51,6 +50,7 @@ def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm):
     t_obs      = observation time used to calculate sigma_v [s]
     N_ant      = number of antennas used to calculate sigma_v
     fwhm       = HI line width [cm/s]
+    delta_z    = delta z for dN/dz integration
     '''
 
     n = len(Dnu_val)
@@ -59,7 +59,7 @@ def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm):
 
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            sigmav = [sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm) for z in z_val]
+            sigmav = [sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z) for z in z_val]
             ax[i,j].scatter(z_val, sigmav)
 
     for i, a in enumerate(ax[:, 0]):
@@ -73,7 +73,7 @@ def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm):
     plt.show()
 
 
-def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, doprtinfo=False, doplot=True):
+def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, delta_z, doprtinfo=False, doplot=True):
     '''
     Creates an image of sigma_v values for different channel widths and survey areas if doplot=True
     Otherwise, returns the values of Dnu, S_area and sigma_v for which sigma_v is minimum and maximum
@@ -84,6 +84,7 @@ def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, doprtinfo=False
     t_obs        = observation time used to calculate sigma_v [s]
     N_ant        = number of antennas used to calculate sigma_v
     fwhm         = HI line width [cm/s]
+    delta_z      = delta z for dN/dz integration
     doprtinfo    = print information of sigma_v and input parameters
     doplot       = plot the image of sigma_v
     '''
@@ -101,7 +102,7 @@ def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, doprtinfo=False
     arr        = np.zeros((N,N), dtype=float)
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            arr[i,j] = sigma_v_func(z_eg, t_obs, N_ant, Dnu, S_area, fwhm)
+            arr[i,j] = sigma_v_func(z_eg, t_obs, N_ant, Dnu, S_area, fwhm, delta_z)
 
     # Determine the minimum and maximum
     #
@@ -130,7 +131,7 @@ def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, doprtinfo=False
         return [Dnu_val[ind_min[0]],S_area_val[ind_min[1]],arr[ind_min]],[Dnu_val[ind_max[0]],S_area_val[ind_max[1]],arr[ind_max]]
         
 
-def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p):
+def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z):
     '''
     Creates a panel of plots ∆v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -142,6 +143,7 @@ def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p):
     N_ant      = number of antennas used to calculate ∆v
     fwhm       = HI line width [cm/s]
     p          = array of H0, q0, j0 values
+    delta_z    = delta z for dN/dz integration
     '''
 
     n = len(Dnu_val)
@@ -151,7 +153,7 @@ def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p):
     
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            sigmav = [sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm) for z in z_val]
+            sigmav = [sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z) for z in z_val]
             ax[i,j].errorbar(z_val, Dv, yerr=sigmav, fmt='.')
 
     for i, a in enumerate(ax[:, 0]):
@@ -165,11 +167,11 @@ def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p):
     plt.show()
 
 
-def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p):
+def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z):
     '''
     Creates a panel of plots sigma_v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
-    z_val.     = values of redshift to calculate ∆v and sigma_v
+    z_val      = values of redshift to calculate ∆v and sigma_v
     Dnu_val    = values of channel width to plot [Hz]
     S_area_val = values of survey area to plot [sq deg]
     t_obs      = observation time used to calculate sigma_v [s]
@@ -177,6 +179,7 @@ def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p)
     N_ant      = number of antennas used to calculate sigma_v
     fwhm       = HI line width [cm/s]
     p          = array of H0, q0, j0 values
+    delta_z    = delta z for dN/dz integration
     '''
 
     n = len(Dnu_val)
@@ -186,7 +189,7 @@ def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p)
     
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            sigmav = np.array([sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm) for z in z_val])
+            sigmav = np.array([sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z) for z in z_val])
             ax[i,j].scatter(z_val, Dv/sigmav)
 
     for i, a in enumerate(ax[:, 0]):
@@ -200,7 +203,7 @@ def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p)
     plt.show()
 
     
-def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_exp, N_ant, fwhm, p, N=100):
+def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_exp, N_ant, fwhm, p, delta_z, N=100):
     '''
     Creates an image of v significance values for different channel widths and survey areas
 
@@ -212,6 +215,7 @@ def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_ex
     N_ant                  = number of antennas used to calculate sigma_v
     fwhm                   = HI line width [cm/s]
     p                      = array of H0, q0, j0 values
+    delta_z                = delta z for dN/dz integration
     N                      = number of points in Dnu and S_area to create image
     '''
 
@@ -222,7 +226,7 @@ def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_ex
 
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            arr[i,j] = Dv/sigma_v_func(z_eg, t_obs, N_ant, Dnu, S_area, fwhm)
+            arr[i,j] = Dv/sigma_v_func(z_eg, t_obs, N_ant, Dnu, S_area, fwhm, delta_z)
 
     fig, ax = plt.subplots(figsize=(4, 3))
     im = ax.imshow(arr,
@@ -235,7 +239,7 @@ def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_ex
     plt.show()
 
 
-def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, priors=None, savefig=False):
+def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z, priors=None, savefig=False):
     '''
     Creates a panel of confidence ellipses for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -247,6 +251,7 @@ def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, p
     N_ant      = number of antennas used to calculate sigma_v
     fwhm       = HI line width [cm/s]
     p          = array of H0, q0, j0 values
+    delta_z    = delta z for dN/dz integration
     priors     = array of the priors to be used (same length and order as p)
     savefig    = save the panel as PNG
     '''
@@ -257,7 +262,7 @@ def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, p
 
     for i, Dnu in enumerate(Dnu_val):
         for j, S_area in enumerate(S_area_val):
-            sigma_v_vect = np.vectorize(lambda z_i: sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm))
+            sigma_v_vect = np.vectorize(lambda z_i: sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm, delta_z))
             sigma_v = sigma_v_vect(z_val)
             delta_v = lambda p: delta_v_func(z_val, p, t_exp)
             F = Fisher_matrix(p, delta_v, sigma_v, priors)
@@ -282,7 +287,7 @@ def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, p
     plt.show()
 
 
-def plot_ellipses(z_val, Dnu_val, S_area, t_obs, t_exp, N_ant, fwhm, p, priors=None, savefig=False):
+def plot_ellipses(z_val, Dnu_val, S_area, t_obs, t_exp, N_ant, fwhm, p, delta_z, priors=None, savefig=False):
     '''
     Creates a panel of confidence ellipses for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -294,13 +299,14 @@ def plot_ellipses(z_val, Dnu_val, S_area, t_obs, t_exp, N_ant, fwhm, p, priors=N
     N_ant      = number of antennas used to calculate sigma_v
     fwhm       = HI line width [cm/s]
     p          = array of H0, q0, j0 values
+    delta_z    = delta z for dN/dz integration
     priors     = array of the priors to be used (same length and order as p)
     savefig    = save ellipses as PNG
     '''
 
     fig, ax = plt.subplots()
     for Dnu in Dnu_val:
-        sigma_v_vect = np.vectorize(lambda z_i: sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm))
+        sigma_v_vect = np.vectorize(lambda z_i: sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm, delta_z))
         sigma_v = sigma_v_vect(z_val)
         delta_v = lambda p: delta_v_func(z_val, p, t_exp)
         F = Fisher_matrix(p, delta_v, sigma_v, priors)
@@ -312,4 +318,71 @@ def plot_ellipses(z_val, Dnu_val, S_area, t_obs, t_exp, N_ant, fwhm, p, priors=N
 
     if savefig:
         fig.savefig('ellipses.png')
+    plt.show()
+
+
+def plot_dv_ellipses_SKA_book(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z, priors=None, savefig=False):
+    '''
+    Creates a panel of plots sigma_v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
+
+    z_val      = values of redshift to calculate ∆v and sigma_v
+    Dnu_val    = values of channel width to plot [Hz]
+    S_area_val = values of survey area to plot [sq deg]
+    t_obs      = observation time used to calculate sigma_v [s]
+    t_exp      = total experiment time used to calulate ∆v [yrs]
+    N_ant      = number of antennas used to calculate sigma_v
+    fwhm       = HI line width [cm/s]
+    p          = array of H0, q0, j0 values
+    delta_z    = delta z for dN/dz integration
+    priors     = array of the priors to be used (same length and order as p)
+    savefig    = save image as PNG
+    '''
+
+    fig, ax = plt.subplots(1,4,figsize=(20,5))
+
+    fontsize = 15
+    
+    Dv = np.array([delta_v_func(z, p, t_exp) for z in z_val])
+
+    z_val_org = z_val
+
+    for j, S_area in enumerate(S_area_val):
+        for i, Dnu in enumerate(Dnu_val):
+            z_val  = z_val - j* np.ones(len(z_val)) * 0.001
+            sigmav = np.array([sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm,delta_z) for z in z_val])
+            ax[j].plot(z_val_org,Dv,marker='',alpha=0.3,color='black',linestyle='--')
+            ax[j].errorbar(z_val,Dv,sigmav,marker="x",capsize=7,alpha=0.3,linestyle='',label=str(Dnu)+' Hz')
+        ax[j].set_xlabel('z',fontsize=fontsize)
+        #ax[i,j].set_ylabel(r'$\Delta$v theoretical and errors [cm/s]')
+        ax[j].set_ylim([0,7])
+        ax[j].set_xlim([0.15,0.55])
+        ax[j].legend(loc="upper left")
+        ax[j].xaxis.set_tick_params(labelsize=fontsize)
+        ax[j].yaxis.set_tick_params(labelsize=fontsize)
+        ax[j].set_title(r'S_area = '+str(S_area_val[j])+' $deg^{2}$', fontsize=fontsize)
+        
+    ax[0].set_ylabel(r'$Dv \pm \Delta Dv \, [cms^{-1}]$', fontsize=fontsize, rotation=90, labelpad=20, va='center')
+
+
+    
+    for Dnu in Dnu_val:
+        sigma_v_vect = np.vectorize(lambda z_i: sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm, delta_z))
+        sigma_v = sigma_v_vect(z_val)
+        delta_v = lambda p: delta_v_func(z_val, p, t_exp)
+        F = Fisher_matrix(p, delta_v, sigma_v, priors)
+        fom = FoM(F, 1, 2)        
+        draw_ellipse(F, 1, 2, delta_chi2=2.3, center=(p[1], p[2]), ax=ax[-1], label=f'{Dnu} Hz (FoM = {fom:.2f})')
+
+    ax[-1].yaxis.set_label_position("right")
+    ax[-1].yaxis.tick_right()
+
+    ax[-1].xaxis.set_tick_params(labelsize=fontsize)
+    ax[-1].yaxis.set_tick_params(labelsize=fontsize)
+
+    ax[-1].legend()
+    ax[-1].set_xlabel(r"$q_0$", fontsize=fontsize)
+    ax[-1].set_ylabel(r"$j_0$", fontsize=fontsize)
+
+    if savefig:
+        fig.savefig('redshiftdrift_skabook.png')
     plt.show()

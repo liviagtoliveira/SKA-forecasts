@@ -53,8 +53,8 @@ def relvelo(obsfreq):
 
     z     = HI_freq/obsfreq -1.
     m     = (z + 1)**2
-    rvelo = c_light * (m - 1)/(m + 1)  # cm/s
-    return rvelo # cm/s
+    rvelo = c_light * (m - 1)/(m + 1)
+    return rvelo
 
     
 def Dnu2dv(Dnu,z):
@@ -72,16 +72,17 @@ def Dnu2dv(Dnu,z):
     return dv
 
 
-def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm):
+def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z):
     '''
     Returns the uncertainty sigma_v in the cosmological velocity drift [cm/s]
     
-    z      = observed redshift
-    t_obs  = observation time (per pointing) [s]
-    N_ant  = total number of antennas
-    Dnu    = channel width [Hz]
-    S_area = observed survey area [sq deg]
-    fwhm   = HI line width [cm/s]
+    z       = observed redshift
+    t_obs   = observation time (per pointing) [s]
+    N_ant   = total number of antennas
+    Dnu     = channel width [Hz]
+    S_area  = observed survey area [sq deg]
+    fwhm    = HI line width [cm/s]
+    delta_z = delta z for dN/dz integration
     '''
 
     # determine dispersion of the HI line
@@ -93,7 +94,7 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm):
     #
     p4            = fwhm / (2*np.sqrt(np.log(2))) 
 
-    # deterine the channel width in velocity
+    # determine the channel width in velocity
     #
     dv            = Dnu2dv(Dnu,z)
 
@@ -124,7 +125,7 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm):
     # single channel detection
     #
     rms                                 = S_rms_func(t_obs, N_ant, Dnu) * Single_channel_detection_factor
-    N_galaxies, Minimum_peak_Amplitude  = N_func(z, rms, S_area)
+    N_galaxies, Minimum_peak_Amplitude  = N_func(z, rms, S_area, delta_z)
 
     # Error on the line center parameter of a pure Gaussian will 
     # be used to estimate the accuray of determine the

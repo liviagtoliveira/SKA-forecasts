@@ -16,13 +16,14 @@ def Simpson(ff, a, b, N=100):
     I = h/3 * (y[0] + y[-1] + 4*np.sum(y[1:N:2]) + 2*np.sum(y[2:N-1:2]))
     return I
 
-def N_func(z, S_rms, S_area):
+def N_func(z, S_rms, S_area, delta_z=0.05):
     '''
     Returns the number of detected HI sources and the lower boundary of the emission line amplitude [𝜇Jy]
 
-    z      = observed redshift
-    S_rms  = array's noise [𝜇Jy]
-    S_area = observed survey area [sq deg]
+    z       = observed redshift
+    S_rms   = array's noise [𝜇Jy]
+    S_area  = observed survey area [sq deg]
+    delta_z = delta z for dN/dz integration
     '''
     #
     # Yahya et al. MNRAS, 450, 3 2015
@@ -105,7 +106,7 @@ def N_func(z, S_rms, S_area):
         return 5, 900
 
     dN_dz = lambda z: 10**c1 * z**c2 * np.exp(-c3*z)
-    a, b = z-.1, z+.1
+    a, b = z-delta_z, z+delta_z
     N = Simpson(dN_dz,a,b) * S_area # integration over a bin of 0.2 centered in z
 
     #print('Simpson ',Simpson(dN_dz,a,b),'N ',np.array(N).astype(int), A,a,b)
@@ -114,13 +115,14 @@ def N_func(z, S_rms, S_area):
     return np.array(N).astype(int), A
 
 
-def N_func_SAX(z, S_rms, S_area):
+def N_func_SAX(z, S_rms, S_area, delta_z=0.05):
     '''
     Returns the number of detected HI sources and the lower boundary of the emission line amplitude [𝜇Jy]
 
-    z      = observed redshift
-    S_rms  = array's noise [𝜇Jy]
-    S_area = observed survey area [sq deg]
+    z       = observed redshift
+    S_rms   = array's noise [𝜇Jy]
+    S_area  = observed survey area [sq deg]
+    delta_z = delta z for dN/dz integration
     '''
     #
     # Obreschkow  et al. ApJ, 703, 1890 2009
@@ -168,7 +170,7 @@ def N_func_SAX(z, S_rms, S_area):
          return 5, 1000
         
     dN_dz = lambda z: 10**c1 * z**c2 * np.exp(-c3*z)
-    a, b = z-.1, z+.1
+    a, b = z-delta_z, z+delta_z
     N = Simpson(dN_dz,a,b) * S_area # integration over a bin of 0.2 centered in z
 
     #print('Simpson ',Simpson(dN_dz,a,b),'N ',np.array(N).astype(int), A,a,b)
