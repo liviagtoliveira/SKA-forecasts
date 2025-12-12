@@ -24,8 +24,8 @@ delta_z_def = 0.1                         # integration delta z
 t_obs_def   = 3600*1                      # s
 Dnu_val     = [1e1, 1e2, 0.21e3]          # Hz
 S_area_val  = [5000,10000,30000]          # sq deg
-t_exp_def   = 30                          # yr
-N_ant_def   = 197                         # integer
+t_exp_def   = 12                          # yr
+N_ant_def   = 144                         # integer
 
 
 # === Plot number counts ===
@@ -176,8 +176,6 @@ best_area   = best_values[0][1]
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, ellipse=True))
 
 print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline))
-
-# IS IT NORMAL THAT U(H0) WILL ALWAYS BE 10 BECAUSE OF THE PRIOR?
 
 #
 # === FoM plots ===
