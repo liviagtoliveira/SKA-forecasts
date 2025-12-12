@@ -1,4 +1,5 @@
 
+import math
 from telescope_lib import *
 from HI_galaxy_lib import *
 
@@ -146,3 +147,20 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z):
 
     return sigma_v
 
+
+def t_obs_tot(t_obs, S_area):
+    '''Returns the total observation time spent in all pointings, based on an hexagonal mosaicking [days]
+        
+    t_obs  = observation time (per pointing) [s]
+    S_area = observed survey area [sq deg]'''
+
+    theta_hex = 0.35
+    theta_row = 0.31
+    side = np.sqrt(S_area)
+    N_hex_s = math.ceil(side/theta_hex)
+    N_hex_l = N_hex_s + 1
+    N_rows = math.ceil(side/theta_row)
+    N_rows_s = N_rows // 2
+    N_rows_l = N_rows - N_rows_s
+    N_p = N_rows_s*N_hex_s + N_rows_l*N_hex_l
+    return t_obs * N_p / (3600*24)

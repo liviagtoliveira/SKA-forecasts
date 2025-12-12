@@ -19,14 +19,13 @@ priors_baseline = np.array([10., 0., 0.]) # prior on H0
 
 fwhm_def    = 150E5                       # cm/s (see Obreschkow 2009)
 z_val       = [0.1, 0.2, 0.3, 0.4, 0.5]   # redshifts
-z_eg        = 0.25                        # example redshift
+z_eg        = 0.3                         # example redshift
 delta_z_def = 0.1                         # integration delta z
 t_obs_def   = 3600*1                      # s
-Dnu_val     = [1E-3,1E-2,1E-1]            # Hz
+Dnu_val     = [1e1, 1e2, 0.21e3]          # Hz
 S_area_val  = [5000,10000,30000]          # sq deg
-
-t_exp_def   = 12                          # yr
-N_ant_def   = 144                         # integer
+t_exp_def   = 30                          # yr
+N_ant_def   = 197                         # integer
 
 
 # === Plot number counts ===
@@ -69,7 +68,7 @@ N_ant_def   = 144                         # integer
 
 # === Plot the final image of the SKA Book  ===
 #
-dvplt.plot_dv_ellipses_SKA_book(z_val, Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def, priors=priors_baseline, savefig=True)
+#dvplt.plot_dv_ellipses_SKA_book(z_val, Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def, priors=priors_baseline, savefig=True)
 
 
 
@@ -159,7 +158,7 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellip
         print(t_obs, N_ant, z_bins[i], FoM[i])
         return FoM[i]
 
-    return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu}\nS_area: {S_area}\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]}\nMeasured Error: {sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
+    return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu} Hz\nS_area: {S_area} sq deg\nTotal observation time: {dvlib.t_obs_tot(t_obs, S_area)} days\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]} [cm/s]\nMeasured Error: {sigma_v[i]} [cm/s]\nSignificance: {delta_v[i]/sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
     
 
 #
@@ -176,6 +175,9 @@ best_area   = best_values[0][1]
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def))
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, ellipse=True))
 
+print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline))
+
+# IS IT NORMAL THAT U(H0) WILL ALWAYS BE 10 BECAUSE OF THE PRIOR?
 
 #
 # === FoM plots ===
@@ -191,7 +193,7 @@ best_area   = best_values[0][1]
 
 #print('\n=== N_ant ===')
 #N_ant_val = np.arange(144,198)
-#fom_val_N = [analysis(t_obs_def, t_exp_def, N_ant, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, plotFoM=True) for N_ant in N_ant_val]
+#fom_val_N = [analysis(t_obs_def, t_exp_def, N_ant, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, rtrnFoM=True) for N_ant in N_ant_val]
 #plt.plot(N_ant_val, fom_val_N)
 #plt.xlabel('N_ant')
 #plt.ylabel('FoM')
