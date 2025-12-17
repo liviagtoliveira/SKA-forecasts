@@ -7,7 +7,48 @@ from telescope_lib import *
 from Fisher_matrix_lib import *
 
 
-def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, delta_z):
+def plot_rms(z_val, Dnu_val, t_obs, N_ant_val, fwhm):
+    '''
+    Creates a panel of plots S_rms for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
+
+    z_val      = values of redshift to calculate dv
+    Dnu_val    = values of channel width to plot [Hz]
+    S_area_val = values of survey area to plot [sq deg]
+    t_obs      = observation time used to calculate S_rms [s]
+    N_ant_val  = numbers of antennas used to calculate S_rms
+    fwhm       = HI line width [cm/s]
+    '''
+    
+    n       = len(Dnu_val)
+    m       = len(N_ant_val)
+    fig, ax = plt.subplots(n,m,figsize=(6*m,4*n))
+
+    for i, Dnu in enumerate(Dnu_val):
+        for j, N_ant in enumerate(N_ant_val):
+            for z in z_val:
+                p4 = fwhm / (2*np.sqrt(np.log(2))) 
+                dv = Dnu2dv(Dnu,z)
+                w20_HI_galaxy = 3.6 * p4 * 1/np.sqrt(2)
+                Single_channel_detection  = w20_HI_galaxy/dv
+                if Single_channel_detection > 1:
+                    Single_channel_detection_factor  = 1/np.sqrt(Single_channel_detection)
+                else:
+                    Single_channel_detection_factor  = 1
+                rms = S_rms_func(t_obs, N_ant, Dnu) * Single_channel_detection_factor
+                ax[i,j].scatter(z, rms, color='tab:blue')
+            ax[i,j].set_xlabel('z')
+            ax[i,j].set_ylabel(r'S_rms [$\mu$Jy]')
+
+    for i, a in enumerate(ax[:, 0]):
+        a.set_ylabel(f"S_rms\nDnu = {Dnu_val[i]} Hz", fontsize=12, rotation=0, labelpad=50, va='center')
+    for j, a in enumerate(ax[0]):
+        a.set_title(f"N_ant = {N_ant_val[j]}", fontsize=12)
+
+    fig.tight_layout()
+    plt.show()
+
+
+def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
     '''
     Creates a panel of plots N(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -16,6 +57,7 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, delta_z):
     S_area_val = values of survey area to plot [sq deg]
     t_obs      = observation time used to calculate N [s]
     N_ant      = number of antennas used to calculate N
+    fwhm       = HI line width [cm/s]
     delta_z    = delta z for dN/dz integration
     '''
     
@@ -24,10 +66,19 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, delta_z):
     fig, ax = plt.subplots(n,m,figsize=(6*m,4*n))
 
     for i, Dnu in enumerate(Dnu_val):
-        rms = S_rms_func(t_obs, N_ant, Dnu)
         for j, S_area in enumerate(S_area_val):
-            N = [N_func(z, rms, S_area, delta_z)[0] for z in z_val]
-            ax[i,j].scatter(z_val, N)
+            for z in z_val:
+                p4 = fwhm / (2*np.sqrt(np.log(2))) 
+                dv = Dnu2dv(Dnu,z)
+                w20_HI_galaxy = 3.6 * p4 * 1/np.sqrt(2)
+                Single_channel_detection  = w20_HI_galaxy/dv
+                if Single_channel_detection > 1:
+                    Single_channel_detection_factor  = 1/np.sqrt(Single_channel_detection)
+                else:
+                    Single_channel_detection_factor  = 1
+                rms = S_rms_func(t_obs, N_ant, Dnu) * Single_channel_detection_factor
+                N = N_func(z, rms, S_area, delta_z)[0]
+                ax[i,j].scatter(z, N, color='tab:blue')
             ax[i,j].set_xlabel('z')
             ax[i,j].set_ylabel('N')
 
@@ -198,6 +249,8 @@ def plot_vsignificance(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p,
         a.set_title(f"S_area = {S_area_val[j]} sq deg")
     for j, a in enumerate(ax[-1]):
         a.set_xlabel(f"redshift z")
+    
+    fig.suptitle(f't_obs = {t_obs} s, t_exp = {t_exp} yrs, N_ant = {N_ant}')
 
     fig.tight_layout()
     plt.show()
@@ -236,6 +289,7 @@ def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_ex
     cbar = plt.colorbar(im, ax=ax, label=r'$\Delta$v significance')
     ax.set_xlabel(r'$S_{area}$ [sq deg]')
     ax.set_ylabel(r'$\Delta \nu$ [Hz]')
+    ax.set_title(f'z = {z_eg}, t_obs = {t_obs} s, t_exp = {t_exp} yrs, N_ant = {N_ant}')
     plt.show()
 
 

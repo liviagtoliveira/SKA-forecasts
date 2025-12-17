@@ -103,7 +103,7 @@ def N_func(z, S_rms, S_area, delta_z=0.05):
         A  = 200
 
     else: # in case there is too much noise, we consider only 5 sources will be detected
-        return 5, 900
+        return 10e-3 * S_area, 900
 
     dN_dz = lambda z: 10**c1 * z**c2 * np.exp(-c3*z)
     a, b = z-delta_z, z+delta_z
@@ -167,7 +167,7 @@ def N_func_SAX(z, S_rms, S_area, delta_z=0.05):
         A  = 100
 
     else: # in case there is too much noise, we consider only 5 sources will be detected
-         return 5, 1000
+         return 10e-3 * S_area, 1000
         
     dN_dz = lambda z: 10**c1 * z**c2 * np.exp(-c3*z)
     a, b = z-delta_z, z+delta_z

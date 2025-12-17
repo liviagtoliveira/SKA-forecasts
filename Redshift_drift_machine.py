@@ -28,11 +28,16 @@ t_exp_def   = 12                          # yr
 N_ant_def   = 144                         # integer
 
 
+# === Plot rms noise ===
+#
+dvplt.plot_rms(z_val, Dnu_val, t_obs_def, [144, 170, 197], fwhm_def)
+
+
 # === Plot number counts ===
 #
 # this should be flat and should not change since we use the channel width
 #
-#dvplt.plot_Nz(z_val, Dnu_val, S_area_val, t_obs_def, N_ant_def, delta_z_def)
+dvplt.plot_Nz(z_val, Dnu_val, S_area_val, t_obs_def, N_ant_def, fwhm_def, delta_z_def)
 
 
 # === Plot colour image of error estimates (image dimension sky area (horizontal) and channel width (vertical)) ===
@@ -42,7 +47,7 @@ N_ant_def   = 144                         # integer
 
 # === Plot colour image of significance of error estimates versus theoretical model (image dimension sky area (horizontal) and channel width (vertical)) ===
 #
-#dvplt.im_vsignificance(z_eg, Dnu_val[0], Dnu_val[-1], S_area_val[0], S_area_val[-1], t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
+dvplt.im_vsignificance(z_eg, Dnu_val[0], Dnu_val[-1], S_area_val[0], S_area_val[-1], t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
 
 
 # === Plot diagram error estimates versus redshift per sky area  ===
@@ -130,13 +135,13 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellip
     
     z1 = np.array([.3, .5])
     z2 = np.array([.1, .3, .5])
-    z3 = np.array([.2, .3, .4])
-    z4 = np.array([.2, .3, .4, .5])
+    #z3 = np.array([.2, .3, .4]) # sources would be detected twice for delta_z = 0.1
+    #z4 = np.array([.2, .3, .4, .5]) # sources would be detected twice for delta_z = 0.1
     #z5 = np.array([0.25,0.3,0.35,0.4])
     #z6 = np.array([0.2,0.25,0.3,0.35,0.4,0.45,0.5])
     # Still to confirm which bins will be tested
 
-    z_bins  = [z1, z2, z3, z4]#, z5, z6]
+    z_bins  = [z1, z2]
     F       = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[0] for z_i in z_bins]
     FoM     = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[1] for z_i in z_bins]
     unc     = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[2] for z_i in z_bins]
@@ -158,7 +163,7 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellip
         print(t_obs, N_ant, z_bins[i], FoM[i])
         return FoM[i]
 
-    return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu} Hz\nS_area: {S_area} sq deg\nTotal observation time: {dvlib.t_obs_tot(t_obs, S_area)} days\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]} [cm/s]\nMeasured Error: {sigma_v[i]} [cm/s]\nSignificance: {delta_v[i]/sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
+    return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu} Hz\nS_area: {S_area} sq deg\nTotal observation time: {dvlib.t_obs_tot(t_obs, S_area):.0f} days\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]} [cm/s]\nMeasured Error: {sigma_v[i]} [cm/s]\nSignificance: {delta_v[i]/sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
     
 
 #
