@@ -48,7 +48,47 @@ def plot_rms(z_val, Dnu_val, t_obs, N_ant_val, fwhm):
     plt.show()
 
 
-def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
+def im_rms(z_eg, Dnu, t_obs_min, t_obs_max, N_ant_min, N_ant_max, fwhm, N=100):
+    '''
+    Creates an image of v significance values for different channel widths and survey areas
+
+    z_eg                 = redshift used to calculate ∆v and sigma_v
+    Dnu                  = channel width used to calculate S_rms [Hz]
+    t_obs_min, t_obs_max = limits of observation time [h]
+    N_ant_min, N_ant_max = limits of number of antennas 
+    fwhm                 = HI line width [cm/s]
+    N                    = number of points in Dnu and S_area to create image
+    '''
+
+    t_obs_val = np.linspace(t_obs_min, t_obs_max, N)
+    N_ant_val = np.arange(N_ant_min, N_ant_max+1)
+    arr       = np.zeros((N,len(N_ant_val)), dtype=float)
+
+    for i, t_obs in enumerate(t_obs_val):
+        for j, N_ant in enumerate(N_ant_val):
+            p4 = fwhm / (2*np.sqrt(np.log(2))) 
+            dv = Dnu2dv(Dnu,z_eg)
+            w20_HI_galaxy = 3.6 * p4 * 1/np.sqrt(2)
+            Single_channel_detection  = w20_HI_galaxy/dv
+            if Single_channel_detection > 1:
+                Single_channel_detection_factor  = 1/np.sqrt(Single_channel_detection)
+            else:
+                Single_channel_detection_factor  = 1
+            arr[i,j] = S_rms_func(t_obs*3600, N_ant, Dnu) * Single_channel_detection_factor
+
+    fig, ax = plt.subplots(figsize=(4, 3))
+    im = ax.imshow(arr,
+                   origin='lower',
+                   extent=(N_ant_val[0], N_ant_val[-1], t_obs_val[0], t_obs_val[-1]),
+                   aspect='auto')
+    cbar = plt.colorbar(im, ax=ax, label=r'$S_{rms}$ [$\mu$Jy]')
+    ax.set_xlabel(r'$N_{ant}$')
+    ax.set_ylabel(r'$t_{obs}$ [h]')
+    ax.set_title(f'z = {z_eg}, Dnu = {Dnu} Hz')
+    plt.show()
+
+
+def plot_Nz_panel(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
     '''
     Creates a panel of plots N(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -89,6 +129,28 @@ def plot_Nz(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
 
     fig.tight_layout()
     plt.show()
+
+
+def plot_Nz(z_val, rms, delta_z, color, label):
+    '''
+    Creates a panel of plots N(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
+
+    z_val   = values of redshift to calculate N
+    Dnu     = channel width used to calculate S_rms [Hz]
+    S_area  = survey area used to calculate N [sq deg]
+    t_obs   = observation time used to calculate N [s]
+    N_ant   = number of antennas used to calculate N
+    fwhm    = HI line width [cm/s]
+    delta_z = delta z for dN/dz integration
+    '''
+    
+    N_vect = np.vectorize(lambda z: N_func(z, rms, 1, delta_z)[0])
+    N = N_vect(z_val)
+    plt.scatter(z_val, N, color=color)
+
+    z_cont = np.linspace(z_val[0], z_val[-1], 100)
+    N_cont = N_vect(z_cont)
+    plt.plot(z_cont, N_cont, color=color, label=label)
 
 
 def plot_sigmav(z_val, Dnu_val, S_area_val, t_obs, N_ant, fwhm, delta_z):
@@ -182,7 +244,27 @@ def im_sigmav(z_eg, Dnu_range, S_area_range, t_obs, N_ant, fwhm, delta_z, doprti
         return [Dnu_val[ind_min[0]],S_area_val[ind_min[1]],arr[ind_min]],[Dnu_val[ind_max[0]],S_area_val[ind_max[1]],arr[ind_max]]
         
 
-def plot_Dv(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z):
+def plot_Dv(z_val, t_exp, p):
+    '''
+    Creates a panel of plots ∆v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
+
+    z_val      = values of redshift to calculate ∆v
+    t_exp      = total experiment time [yrs]
+    p          = array of H0, q0, j0 values
+    '''
+
+    Dv = [delta_v_func(z, p, t_exp) for z in z_val]
+    z_cont = np.linspace(z_val[0], z_val[-1], 100)
+    Dv_cont = [delta_v_func(z, p, t_exp) for z in z_cont]
+    plt.scatter(z_val, Dv)
+    plt.plot(z_cont, Dv_cont)
+    plt.xlabel('z')
+    plt.ylabel(r'$\Delta$v [cm/s]')
+    plt.title(f't_exp = {t_exp} yrs')
+    plt.show()
+
+
+def plot_Dv_errbar(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, delta_z):
     '''
     Creates a panel of plots ∆v(z) for different values of channel width and survey area (Dnu in the lines and S_area in the columns)
 
@@ -289,7 +371,7 @@ def im_vsignificance(z_eg, Dnu_min, Dnu_max, S_area_min, S_area_max, t_obs, t_ex
     cbar = plt.colorbar(im, ax=ax, label=r'$\Delta$v significance')
     ax.set_xlabel(r'$S_{area}$ [sq deg]')
     ax.set_ylabel(r'$\Delta \nu$ [Hz]')
-    ax.set_title(f'z = {z_eg}, t_obs = {t_obs} s, t_exp = {t_exp} yrs, N_ant = {N_ant}')
+    ax.set_title(f'z = {z_eg}, t_obs = {t_obs/3600} h, t_exp = {t_exp} yrs, N_ant = {N_ant}')
     plt.show()
 
 
@@ -321,15 +403,14 @@ def plot_ellps_panel(z_val, Dnu_val, S_area_val, t_obs, t_exp, N_ant, fwhm, p, d
             delta_v = lambda p: delta_v_func(z_val, p, t_exp)
             F = Fisher_matrix(p, delta_v, sigma_v, priors)
             fom = FoM(F, 1, 2)
-            #print(Dnu, S_area, unc(F))
             draw_ellipse(F, 1, 2, delta_chi2=2.3, center=(p[1], p[2]), ax=ax[i,j], label=r'1$\sigma$')
             draw_ellipse(F, 1, 2, delta_chi2=6.17, center=(p[1], p[2]), ax=ax[i,j], label=r'2$\sigma$')
             draw_ellipse(F, 1, 2, delta_chi2=11.8, center=(p[1], p[2]), ax=ax[i,j], label=r'3$\sigma$')
             ax[i,j].legend()
-            ax[i,j].text(-8, -40, f'FoM = {fom:.2f}')
+            ax[i,j].text(0.1, 0.1, f'FoM = {fom:.2f}', fontsize=12, transform=ax[i,j].transAxes, verticalalignment='bottom', horizontalalignment='left')
 
     for i, a in enumerate(ax[:, 0]):
-        a.set_ylabel(f"$\\mathbf{{j_0}}$\n[Dnu = {Dnu_val[i]} Hz]", fontsize=12)
+        a.set_ylabel(f"Dnu = {Dnu_val[i]} Hz\n$\\mathbf{{j_0}}$", fontsize=12)
     for j, a in enumerate(ax[0]):
         a.set_title(f"S_area = {S_area_val[j]} sq deg")
     for j, a in enumerate(ax[-1]):

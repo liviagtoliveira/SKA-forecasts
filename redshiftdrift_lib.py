@@ -35,7 +35,7 @@ def delta_v_func(z, p, t_exp):
     Returns the spectroscopic velocity shift [cm/s]
 
     z     = observed redshift
-    p     = array of H0, q0 and j0 values
+    p     = array of H0 [km/s/Mpc], q0 and j0 values
     t_exp = total experiment time (time span between observations) [yrs]
     '''
 
@@ -58,18 +58,19 @@ def relvelo(obsfreq):
     return rvelo
 
     
-def Dnu2dv(Dnu,z):
+def Dnu2dv(Dnu, z):
     '''
     Returns the channel width in velocity [cm/s]
 
     Dnu = channel width in frequency [Hz]
+    z   = observed redshift
     '''
     
     lower_freq = HI_freq/(z+1) - Dnu/2
     upper_freq = HI_freq/(z+1) + Dnu/2
     upper_v    = relvelo(lower_freq)
     lower_v    = relvelo(upper_freq)
-    dv = (upper_v - lower_v) 
+    dv = (upper_v - lower_v)
     return dv
 
 
@@ -107,7 +108,7 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z):
     #
     # HI profile at 20 percent level see Obreschow et al. 2009
     #
-    w20_HI_galaxy = 3.6 * p4 * 1/np.sqrt(2)                         
+    w20_HI_galaxy = 3.6 * p4 * 1/np.sqrt(2)
     #
     # Essentially this factor scales the Dnu to a single
     # channel.
@@ -126,6 +127,7 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z):
     # single channel detection
     #
     rms                                 = S_rms_func(t_obs, N_ant, Dnu) * Single_channel_detection_factor
+    #print(rms)
     N_galaxies, Minimum_peak_Amplitude  = N_func(z, rms, S_area, delta_z)
 
     # Error on the line center parameter of a pure Gaussian will 

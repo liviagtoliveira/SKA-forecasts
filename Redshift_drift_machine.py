@@ -21,23 +21,37 @@ fwhm_def    = 150E5                       # cm/s (see Obreschkow 2009)
 z_val       = [0.1, 0.2, 0.3, 0.4, 0.5]   # redshifts
 z_eg        = 0.3                         # example redshift
 delta_z_def = 0.1                         # integration delta z
-t_obs_def   = 3600*1                      # s
-Dnu_val     = [1e1, 1e2, 0.21e3]          # Hz
-S_area_val  = [5000,10000,30000]          # sq deg
-t_exp_def   = 12                          # yr
-N_ant_def   = 144                         # integer
+t_obs_def   = 3600*0.05                   # s
+Dnu_val     = [1e-5, 1e-3]                # Hz
+S_area_val  = [3500, 5000]               # sq deg
+t_exp_def   = 32                          # yr
+N_ant_def   = 197                         # integer
 
 
 # === Plot rms noise ===
 #
-dvplt.plot_rms(z_val, Dnu_val, t_obs_def, [144, 170, 197], fwhm_def)
+#dvplt.plot_rms(z_val, Dnu_val, t_obs_def, [144, 170, 197], fwhm_def)
+
+
+# === Plot colour image of rms noise ===
+#
+#dvplt.im_rms(z_eg, Dnu_val[-1], 1, 12, 144, 197, fwhm_def)
 
 
 # === Plot number counts ===
 #
 # this should be flat and should not change since we use the channel width
 #
-dvplt.plot_Nz(z_val, Dnu_val, S_area_val, t_obs_def, N_ant_def, fwhm_def, delta_z_def)
+#dvplt.plot_Nz_panel(z_val, Dnu_val, S_area_val, t_obs_def, N_ant_def, fwhm_def, delta_z_def)
+#dvplt.plot_Nz(z_val, 1, delta_z_def, color='tab:blue', label=r'$S_{rms}$ = 1 $\mu$Jy')
+#dvplt.plot_Nz(z_val, 5, delta_z_def, color='tab:orange', label=r'$S_{rms}$ = 5 $\mu$Jy')
+#dvplt.plot_Nz(z_val, 10, delta_z_def, color='tab:green', label=r'$S_{rms}$ = 10 $\mu$Jy')
+#dvplt.plot_Nz(z_val, 40, delta_z_def, color='tab:red', label=r'$S_{rms}$ = 40 $\mu$Jy')
+#dvplt.plot_Nz(z_val, 100, delta_z_def, color='tab:purple', label=r'$S_{rms}$ = 100 $\mu$Jy')
+#plt.legend()
+#plt.xlabel('z')
+#plt.ylabel(r'$N_{HI}$ / sq deg')
+#plt.show()
 
 
 # === Plot colour image of error estimates (image dimension sky area (horizontal) and channel width (vertical)) ===
@@ -47,7 +61,7 @@ dvplt.plot_Nz(z_val, Dnu_val, S_area_val, t_obs_def, N_ant_def, fwhm_def, delta_
 
 # === Plot colour image of significance of error estimates versus theoretical model (image dimension sky area (horizontal) and channel width (vertical)) ===
 #
-dvplt.im_vsignificance(z_eg, Dnu_val[0], Dnu_val[-1], S_area_val[0], S_area_val[-1], t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
+#dvplt.im_vsignificance(z_eg, Dnu_val[0], Dnu_val[-1], S_area_val[0], S_area_val[-1], t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
 
 
 # === Plot diagram error estimates versus redshift per sky area  ===
@@ -62,7 +76,8 @@ dvplt.im_vsignificance(z_eg, Dnu_val[0], Dnu_val[-1], S_area_val[0], S_area_val[
 
 # === Plot diagram theoretical model redshiftdrifts and uncertainties versus redshift per sky area  ===
 #
-#dvplt.plot_Dv(z_val, Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
+#dvplt.plot_Dv(z_val, t_exp_def, p_LCDM)
+#dvplt.plot_Dv_errbar(z_val, Dnu_val, S_area_val, t_obs_def, t_exp_def, N_ant_def, fwhm_def, p_LCDM, delta_z_def)
 
 
 # === Plot confidence ellipses  ===
@@ -119,7 +134,7 @@ def hrk_analysis_results(z, t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, pri
     return f'\n=== Analysis ===\nPriors: {priors}\nRedshift: {z}\nDnu: {Dnu}\nS_area: {S_area}\nExpected drift: {delta_v}\nMeasured Error: {sigma_v}\nFigure of Merit: {FoM} \nUncertainties of H0, q0, j0: {unc}'
 
 
-def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellipse=False, rtrnFoM=False):
+def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellipse=False, all_ellipses=False, rtrnFoM=False, rtrn_allFoM=False):
     '''Returns analysis information (optimzed redshift bins, expected drifts, their uncertainties, FoM and parameter constraints) for the input setup
     If rtrnFoM=True, it returns the optimized FoM instead
     If ellipse=True, it also plots the optimized confidence ellipse
@@ -135,13 +150,19 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellip
     
     z1 = np.array([.3, .5])
     z2 = np.array([.1, .3, .5])
-    #z3 = np.array([.2, .3, .4]) # sources would be detected twice for delta_z = 0.1
-    #z4 = np.array([.2, .3, .4, .5]) # sources would be detected twice for delta_z = 0.1
-    #z5 = np.array([0.25,0.3,0.35,0.4])
-    #z6 = np.array([0.2,0.25,0.3,0.35,0.4,0.45,0.5])
+    z3 = np.array([.3, .5, .7])
+    z4 = np.array([.1, .3, .5, .7])
+    z5 = np.array([.3, .5, .7, .9])
+    z6 = np.array([.2, .4])
+    z7 = np.array([.2, .4, .6])
+    #z8 = np.array([.1, .3])
+    #z9 = np.array([.2, .3, .4]) # sources would be detected twice for delta_z = 0.1
+    #z10 = np.array([.2, .3, .4, .5]) # sources would be detected twice for delta_z = 0.1
+    #z11 = np.array([0.25,0.3,0.35,0.4])
+    #z12 = np.array([0.2,0.25,0.3,0.35,0.4,0.45,0.5])
     # Still to confirm which bins will be tested
 
-    z_bins  = [z1, z2]
+    z_bins  = [z1, z2, z3, z4, z5, z6, z7]
     F       = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[0] for z_i in z_bins]
     FoM     = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[1] for z_i in z_bins]
     unc     = [analysis_FoM(z_i, t_obs/len(z_i), t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors)[2] for z_i in z_bins]
@@ -159,11 +180,23 @@ def analysis(t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, priors=None, ellip
         ax.set_ylabel(r'$j_0$')
         plt.show()
 
-    if rtrnFoM:
-        print(t_obs, N_ant, z_bins[i], FoM[i])
-        return FoM[i]
+    if all_ellipses:
+        fig, ax = plt.subplots()
+        for n in range(len(F)):
+            fmlib.draw_ellipse(F[n], 1, 2, delta_chi2=2.3, center=(p_LCDM[1], p_LCDM[2]), ax=ax, label=z_bins[n])
+        ax.legend()
+        ax.set_xlabel(r'$q_0$')
+        ax.set_ylabel(r'$j_0$')
+        plt.show()
 
-    return f'\n=== Analysis ===\nPriors: {priors}\nDnu: {Dnu} Hz\nS_area: {S_area} sq deg\nTotal observation time: {dvlib.t_obs_tot(t_obs, S_area):.0f} days\nArray of redshifts: {z_bins[i]}\nExpected drift: {delta_v[i]} [cm/s]\nMeasured Error: {sigma_v[i]} [cm/s]\nSignificance: {delta_v[i]/sigma_v[i]}\nFigure of Merit (1 sigma): {FoM[i]} \nUncertainties of H0, q0, j0: {unc[i]}'    
+    if rtrnFoM:
+        print(t_obs//3600, N_ant, z_bins[i], FoM[i])
+        return FoM[i]
+    
+    if rtrn_allFoM:
+        return FoM
+
+    return f'\n=== Analysis ===\nDnu: {Dnu} Hz\nS_area: {S_area} sq deg\nArray of redshifts: {z_bins[i]}\nTotal observation time: {dvlib.t_obs_tot(t_obs, S_area*len(z_bins[i])):.0f} days\nExpected drift: {delta_v[i]} [cm/s]\nMeasured Error: {sigma_v[i]} [cm/s]\nSignificance: {delta_v[i]/sigma_v[i]}\nFigure of Merit: {FoM[i]}\nUncertainties of H0, q0, j0: {unc[i]}\nSignificances of H0, q0, j0: {abs(p_LCDM/unc[i])}'    
     
 
 #
@@ -180,7 +213,7 @@ best_area   = best_values[0][1]
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def))
 #print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, ellipse=True))
 
-print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline))
+print(analysis(t_obs_def, t_exp_def, N_ant_def, 1e-3, 5000, fwhm_def, delta_z_def, priors_baseline))
 
 #
 # === FoM plots ===
@@ -189,8 +222,8 @@ print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, d
 #print('\n=== t_obs ===')
 #t_obs_val = np.linspace(3600,3600*24,24)
 #fom_val_t = [analysis(t_obs, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, delta_z_def, priors_baseline, rtrnFoM=True) for t_obs in t_obs_val]
-#plt.plot(t_obs_val, fom_val_t)
-#plt.xlabel('t_obs [s]')
+#plt.plot(t_obs_val//3600, fom_val_t)
+#plt.xlabel('t_obs [h]')
 #plt.ylabel('FoM')
 #plt.show()
 
@@ -201,3 +234,27 @@ print(analysis(t_obs_def, t_exp_def, N_ant_def, best_dnu, best_area, fwhm_def, d
 #plt.xlabel('N_ant')
 #plt.ylabel('FoM')
 #plt.show()
+
+
+#
+# === FoM plots for each strategy ===
+#
+#t_obs_val = np.linspace(3600*0.1,3600*1,100)
+#N_ant_val = np.arange(144,198)
+#fig, ax = plt.subplots(1, 2, figsize=(6,4))
+#for n in range(7):
+#    fom_t = [analysis(t_obs, t_exp_def, 144, 1, 10000, fwhm_def, delta_z_def, priors_baseline, rtrn_allFoM=True)[n] for t_obs in t_obs_val]
+#    fom_N = [analysis(0.1*3600, t_exp_def, N_ant, 1, 10000, fwhm_def, delta_z_def, priors_baseline, rtrn_allFoM=True)[n] for N_ant in N_ant_val]
+#    ax[0].plot(t_obs_val//3600, np.array(fom_t), label=f'Strategy {n+1}')
+#    ax[1].plot(N_ant_val, fom_N, label=f'Strategy {n+1}')
+#ax[0].legend()
+#ax[0].set_xlabel('t_obs [h]')
+#ax[0].set_ylabel('FoM')
+#ax[0].set_title(f'N_ant = 144')
+#ax[1].legend()
+#ax[1].set_xlabel('N_ant')
+#ax[1].set_ylabel('FoM')
+#ax[1].set_title(f't_obs = 0.1 h')
+#plt.tight_layout()
+#plt.show()
+
