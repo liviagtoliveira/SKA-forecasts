@@ -6,7 +6,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def partial(ff, k, p, H=1e-6):
+
+def partial(ff, k, p):
     '''
     Returns the partial derivative of a function
     
@@ -16,18 +17,19 @@ def partial(ff, k, p, H=1e-6):
     H  = approximation step size
     '''
     
+    h = 1e-4 * abs(p[k]) if p[k] != 0 else 1e-4
     inf,sup = np.copy(p),np.copy(p) # points where to calculate ff
-    inf[k] -= H/2 # (..., x_i - H/2, ...)
-    sup[k] += H/2 # (..., x_i + H/2, ...)
+    inf[k] -= h/2 # (..., x_i - H/2, ...)
+    sup[k] += h/2 # (..., x_i + H/2, ...)
     
-    return (ff(sup) - ff(inf)) / H
+    return (ff(sup) - ff(inf)) / h
 
 
 def Fisher_matrix(p, ffs, sigmas, priors=None):
     '''
     Returns the Fisher matrix of a model
     
-    p      = list of model parameters
+    p      = array of model parameters
     ffs    = array of the functions that describe the observables
     sigmas = array of the Gaussian errors of the observables
     priors = array of the priors to be used (same length and order as p)
@@ -40,6 +42,12 @@ def Fisher_matrix(p, ffs, sigmas, priors=None):
         for j in range(m):
 
             part_i, part_j = partial(ffs,i,p), partial(ffs,j,p)
+
+            #if i == j:
+            #    print(f"--- Parâmetro índice {i} ---")
+            #    print(f"Vetor de derivadas parciais: {part_i}")
+            #    print(f"Soma dos quadrados / sigma**2: {np.sum(part_i**2 / sigmas**2)}")
+
             F[i,j] = np.sum((part_i * part_j) / sigmas**2) # calculates each entry
     
     if priors is None or np.all(priors==0):
@@ -133,10 +141,12 @@ def draw_ellipse(F, i, j, delta_chi2=2.3, center=(0, 0), ax=None, **kwargs):
     '''
     Returns the confidence ellipse of p_i (x) and p_j (y)
     
-    F = Fisher matrix of the model
-    i, j = indexes of the parameters for the ellipse
+    F          = Fisher matrix of the model
+    i, j       = indexes of the parameters for the ellipse
     delta_chi2 = confidence interval of interest
-    **kwargs = specifications of the ellipse
+    center     = tuple of the center point of the ellipse
+    ax         = plot ax previously created
+    **kwargs   = specifications of the ellipse
     '''
 
     ai, aj, angle = ellipse(F, i, j)
@@ -155,5 +165,3 @@ def draw_ellipse(F, i, j, delta_chi2=2.3, center=(0, 0), ax=None, **kwargs):
     
     ax.plot(x_rot, y_rot, **kwargs)
     return fig, ax
-
-

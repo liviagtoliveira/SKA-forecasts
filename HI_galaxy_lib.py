@@ -1,6 +1,7 @@
 
 import numpy as np
 
+
 def Simpson(ff, a, b, N=100):
     '''
     Returns the integral of a function between a and b
@@ -16,7 +17,8 @@ def Simpson(ff, a, b, N=100):
     I = h/3 * (y[0] + y[-1] + 4*np.sum(y[1:N:2]) + 2*np.sum(y[2:N-1:2]))
     return I
 
-def N_func(z, S_rms, S_area, delta_z=0.05):
+
+def N_func(z, S_rms, S_area, delta_z=0.1):
     '''
     Returns the number of detected HI sources and the lower boundary of the emission line amplitude [𝜇Jy]
 
@@ -115,7 +117,10 @@ def N_func(z, S_rms, S_area, delta_z=0.05):
     return np.array(N).astype(int), A
 
 
-def N_func_SAX(z, S_rms, S_area, delta_z=0.05):
+
+##########################################################################################################################################
+
+def N_func_SAX(z, S_rms, S_area, delta_z=0.1):
     '''
     Returns the number of detected HI sources and the lower boundary of the emission line amplitude [𝜇Jy]
 

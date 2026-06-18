@@ -1,36 +1,29 @@
 
-import math
 from telescope_lib import *
 from HI_galaxy_lib import *
 
 c_light = 29979245800    # cm/s
 HI_freq = 1420405751.768 # Hz
 
-def E(z, q0, j0):
+
+def delta_v_exct_func(z, model, t_exp):
     '''
-    Returns the re-scaled Hubble parameter (dimensionless)
+    Returns the exact spectroscopic velocity shift [cm/s]
 
-    z  = observed redshift
-    q0 = deceleration parameter
-    j0 = jerk parameter
-    '''
-
-    a = (q0 + 1) * z
-    b = 1/2 * (j0 - q0**2) * z**2
-    return 1 + a + b
-
-def Z1(z, q0, j0):
-    '''
-    Returns the first time derivative of the redshift (dimensionless)
-
-    z  = observed redshift
-    q0 = deceleration parameter
-    j0 = jerk parameter
+    z     = observed redshift
+    model = array of H0 [km/s/Mpc], OmegaM, w0 and wa values
+    t_exp = total experiment time (time span between observations) [yrs]
     '''
 
-    return 1 + z - E(z, q0, j0)
+    H0, OmegaM, w0, wa = model
+    H0_s           = H0 / 3.08567758128e19 # km/s/Mpc to 1/s
+    E_z_exct       = np.sqrt(OmegaM*(1+z)**3 + (1-OmegaM)*(1+z)**(3*(1+w0+wa))*np.exp(-3*wa*(z/(1+z))))
+    Z1_exct        = 1 + z - E_z_exct
 
-def delta_v_func(z, p, t_exp):
+    return c_light * H0_s * t_exp*365*24*3600 * Z1_exct / (1 + z)
+
+
+def delta_v_0_func(z, p, t_exp):
     '''
     Returns the spectroscopic velocity shift [cm/s]
 
@@ -40,8 +33,68 @@ def delta_v_func(z, p, t_exp):
     '''
 
     H0, q0, j0 = p
+    E = 1 + (q0 + 1) * z + 1/2 * (j0 - q0**2) * z**2
+    Z1 = 1 + z - E
     H0_s       = H0 / 3.08567758128e19 # km/s/Mpc to 1/s
-    return c_light * H0_s * t_exp*365*24*3600 * Z1(z, q0, j0) / (1 + z)
+    return c_light * H0_s * t_exp*365*24*3600 * Z1 / (1 + z)
+
+
+def E_q_z(z, OmegaM, w0, wa):
+    '''
+    Returns the rescaled Hubble parameter squared and deceleration parameter for a given model
+
+    z      = observed redshift
+    OmegaM = matter density parameter
+    w0     = equation of state parameter
+    wa     = dark energy dynamical parameter
+    '''
+    E2 = OmegaM*(1+z)**3 + (1-OmegaM)*(1+z)**(3*(1+w0+wa))*np.exp(-3*wa*z/(1+z))
+    q = 1/2 + 3/(2*E2)*(w0+wa*z/(1+z))*(1-OmegaM)*(1+z)**(3*(1+w0+wa))*np.exp(-3*wa*z/(1+z))
+    return E2, q
+
+
+def param(z0, model):
+    '''
+    Returns the rescaled Hubble parameter squared, deceleration parameter and jerk parameter for a given model
+
+    z0    = center redshift
+    model = array of H0 [km/s/Mpc], OmegaM, w0 and wa values 
+    '''
+    H0, OmegaM, w0, wa = model
+    E2_z0, q_z0 = E_q_z(z0, OmegaM, w0, wa)
+    H_z0 = np.sqrt(E2_z0)*H0
+
+    h = 1e-5 * abs(q_z0) if q_z0 != 0 else 1e-5
+    q_plus = E_q_z(z0+h/2, OmegaM, w0, wa)[1]
+    q_minus = E_q_z(z0-h/2, OmegaM, w0, wa)[1]
+    dq_dz = (q_plus-q_minus)/h
+
+    j_z0 = q_z0*(1+2*q_z0) + (1+z0)*dq_dz
+
+    #a = 3*OmegaM*(1+z0)**2 + 3*(1+w0+wa*z0/(1+z0))*(1-OmegaM)*(1+z0)**(3*(1+w0+wa)-1)*np.exp(3*wa*z0/(1+z0))
+    #b = 6*OmegaM*(1+z0) + 3*wa/(1+z0)**3*(1-OmegaM)*(1+z0)**(3*(1+w0+wa))*np.exp(-3*wa*z0/(1+z0)) + 3*(1+w0+wa*z0/(1+z0))*(1-OmegaM)*(1+3*w0+3*wa)*(1+z0)**(1+3*w0+3*wa)*np.exp(-3*wa*z0/(1+z0)) - 9*wa/(1+z0)**2*(1+w0+wa*z0/(1+z0))*(1-OmegaM)*(1+z0)**(2+3*w0+3*wa)*np.exp(-3*wa*z0/(1+z0))
+    #j_z0 = (1+z0)**2 * (-a/(2*E2_z0**1.5) + b/(2*E2_z0) + a**2/(4*E2_z0**2)) - (1+z0)/E2_z0 * a + 1
+
+    return np.array([H_z0, q_z0, j_z0, H0])
+
+
+def delta_v_cosmog_func(z, z0, p, t_exp):
+    '''
+    Returns the spectroscopic velocity shift in the cosmographic expansion centered at a certain redshift [cm/s]
+
+    z     = observed redshift
+    z0    = redshift to center expansion
+    p     = array of H(z0) [km/s/Mpc], q(z0), j(z0) and H0
+    t_exp = total experiment time (time span between observations) [yrs]
+    '''
+    H_z0, q_z0, j_z0, H0 = p
+    dz = z - z0
+    E_z = H_z0/H0 * (1 + (1+q_z0)/(1+z0) * dz + (j_z0-q_z0**2)/(2*(1+z0)**2) * dz**2)
+    H0_s = H0 / 3.08567758128e19 # km/s/Mpc to 1/s
+    t_exp_s = t_exp*365*24*3600
+    Z1 = 1 + z - E_z
+
+    return c_light * H0_s * t_exp_s * Z1 / (1 + z)
 
 
 def relvelo(obsfreq):
@@ -148,21 +201,3 @@ def sigma_v_func(z, t_obs, N_ant, Dnu, S_area, fwhm, delta_z):
     sigma_v = rms/np.sqrt(N_galaxies) * (Minimum_peak_Amplitude**2 * np.sqrt(np.pi) / (p4*dv*np.sqrt(2)))**-.5 
 
     return sigma_v
-
-
-def t_obs_tot(t_obs, S_area):
-    '''Returns the total observation time spent in all pointings, based on an hexagonal mosaicking [days]
-        
-    t_obs  = observation time (per pointing) [s]
-    S_area = observed survey area [sq deg]'''
-
-    theta_hex = 0.35
-    theta_row = 0.31
-    side = np.sqrt(S_area)
-    N_hex_s = math.ceil(side/theta_hex)
-    N_hex_l = N_hex_s + 1
-    N_rows = math.ceil(side/theta_row)
-    N_rows_s = N_rows // 2
-    N_rows_l = N_rows - N_rows_s
-    N_p = N_rows_s*N_hex_s + N_rows_l*N_hex_l
-    return t_obs * N_p / (3600*24)

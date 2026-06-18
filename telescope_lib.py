@@ -1,4 +1,7 @@
+
+import math
 import numpy as np
+
 
 def SEFD(D_dish):
     '''
@@ -11,7 +14,8 @@ def SEFD(D_dish):
     T_sys    = 23
     eta_dish = 1.
     return 2*kB*T_sys / (eta_dish*np.pi*D_dish**2/4)
-    
+
+
 def S_rms_func(t_obs, N_ant, Dnu):
     '''
     Returns the RMS noise of the array [𝜇Jy]
@@ -27,6 +31,26 @@ def S_rms_func(t_obs, N_ant, Dnu):
     SEFD_arr = (n_13_5*(n_13_5-1)/SEFD(13.5)**2 + 2*n_13_5*n_15/(SEFD(13.5)*SEFD(15.)) + n_15*(n_15-1)/SEFD(15.)**2)**-.5
     return SEFD_arr / (eta_sys*np.sqrt(2*Dnu*t_obs)) * 1e32 # W m⁻² Hz⁻¹ to 𝜇Jy
 
+
+def t_obs_tot(t_obs, S_area):
+    '''Returns the total observation time spent in all pointings, based on an hexagonal mosaicking [days]
+        
+    t_obs  = observation time (per pointing) [s]
+    S_area = observed survey area [sq deg]'''
+
+    theta_hex = 0.35
+    theta_row = 0.31
+    side = np.sqrt(S_area)
+    N_hex_s = math.ceil(side/theta_hex)
+    N_hex_l = N_hex_s + 1
+    N_rows = math.ceil(side/theta_row)
+    N_rows_s = N_rows // 2
+    N_rows_l = N_rows - N_rows_s
+    N_p = N_rows_s*N_hex_s + N_rows_l*N_hex_l
+    return t_obs * N_p / (3600*24)
+
+
+##########################################################################################################################################
 
 def S_rms_func_hrk(T_obs,N_MKplus,Dnu):
     '''
