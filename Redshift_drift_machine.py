@@ -144,8 +144,10 @@ def analysis_FoM(z, t_obs, t_exp, N_ant, Dnu, S_area, fwhm, delta_z, p, priors=N
     
     sigma_v_vect = np.vectorize(lambda z_i: dvlib.sigma_v_func(z_i, t_obs, N_ant, Dnu, S_area, fwhm, delta_z))
     sigma_v = sigma_v_vect(z)
-    delta_v = lambda params: dvlib.delta_v_0_func(z, params, t_exp) # for cosmography centered at z=0
-    #delta_v = lambda params: dvlib.delta_v_cosmog_func(z, z0, params, t_exp) # for generalized cosmography
+    if len(p)==3:
+        delta_v = lambda params: dvlib.delta_v_0_func(z, params, t_exp) # for cosmography centered at z=0
+    if len(p)==4:
+        delta_v = lambda params: dvlib.delta_v_cosmog_func(z, z0, params, t_exp) # for generalized cosmography
 
     F = fmlib.Fisher_matrix(p, delta_v, sigma_v, priors)
     
